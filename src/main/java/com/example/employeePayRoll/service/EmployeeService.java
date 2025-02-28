@@ -3,6 +3,7 @@ package com.example.employeePayRoll.service;
 import com.example.employeePayRoll.exception.ResourceNotFoundException;
 import com.example.employeePayRoll.model.Employee;
 import com.example.employeePayRoll.repository.EmployeeRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -32,12 +33,17 @@ public class EmployeeService {
     }
 
     public Employee updateEmployee(Long id, Employee updatedEmployee) {
-        Employee existingEmployee = getEmployeeById(id);
-        existingEmployee.setName(updatedEmployee.getName());
-        existingEmployee.setSalary(updatedEmployee.getSalary());
-        existingEmployee.setDepartment(updatedEmployee.getDepartment());
-        return employeeRepository.save(existingEmployee);
+        Optional<Employee> existingEmployee = employeeRepository.findById(id);
+        if (existingEmployee.isPresent()) {
+            Employee emp = existingEmployee.get();
+            emp.setName(updatedEmployee.getName());
+            emp.setSalary(updatedEmployee.getSalary());
+            emp.setDepartment(updatedEmployee.getDepartment());
+            return employeeRepository.save(emp); // Fix: Save 'emp' instead of 'existingEmployee'
+        }
+        throw new EntityNotFoundException("Employee with ID " + id + " not found"); // Better error handling
     }
+
 
     public void deleteEmployee(Long id) {
         Employee existingEmployee = getEmployeeById(id);
